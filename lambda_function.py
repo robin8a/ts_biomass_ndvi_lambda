@@ -116,7 +116,7 @@ def lambda_handler(event, context):
         return {
             'statusCode': 400,
             'body': json.dumps('Error: Invalid S3 event structure.')
-        }q
+        }
 
     # Extract the bucket names from the event payload
     try:
