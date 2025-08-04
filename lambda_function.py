@@ -107,6 +107,7 @@ def lambda_handler(event, context):
         # Assuming the bucket names are provided in a 'configuration' key
         # You may need to adjust this based on how your event is structured.
         config = json.loads(event.get('custom_payload', '{}'))
+        print(f"Extracted configuration: {config}")
         output_bucket_name = config.get('output_bucket_name')
         model_bucket_name = config.get('model_bucket_name')
         model_key = config.get('model_key', 'biomass_model.joblib')

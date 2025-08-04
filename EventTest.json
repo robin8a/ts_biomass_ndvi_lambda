@@ -1,0 +1,15 @@
+{
+  "Records": [
+    {
+      "s3": {
+        "bucket": {
+          "name": "tsbiomassmodeldata"
+        },
+        "object": {
+          "key": "pol_20250215180043_2022_S2_B2_B3_B4_B5_drive.tif"
+        }
+      }
+    }
+  ],
+  "custom_payload": "{\"output_bucket_name\": \"tsbiomassmodeldata\", \"model_bucket_name\": \"tsbiomassmodeldata\"}"
+}
