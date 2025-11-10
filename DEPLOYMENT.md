@@ -382,3 +382,65 @@ aws s3 cp s3://tsbiomassmodeldata/png_biomass_map_img__20251105162753__S2__B4_B3
 
 
 ```
+
+```bash
+
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -d '{
+    "Records": [
+      {
+        "s3": {
+          "bucket": {
+            "name": "tsbiomassmodeldata"
+          },
+          "object": {
+            "key": "pol_20250215003502_2024_S2_B2_B3_B4_drive.tif"
+          }
+        }
+      }
+    ],
+    "custom_payload": "{\"output_bucket_name\": \"tsbiomassmodeldata\", \"model_bucket_name\": \"tsbiomassmodeldata\"}"
+}' \
+  https://9e7wnzvwcb.execute-api.us-east-1.amazonaws.com/dev/predict_nvdi_tif
+
+aws s3 ls s3://tsbiomassmodeldata/ | grep pol_20250215003502_2024_S2_B2_B3_B4_drive
+
+```
+
+```sh
+
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -d '{
+    "Records": [
+      {
+        "s3": {
+          "bucket": {
+            "name": "tsbiomassmodeldata"
+          },
+          "object": {
+            "key": "img__20251110191822__S2__B4_B3_B2__2025_10_06__2827.tif"
+          }
+        }
+      }
+    ],
+    "custom_payload": "{\"output_bucket_name\": \"tsbiomassmodeldata\", \"model_bucket_name\": \"tsbiomassmodeldata\"}"
+}' \
+  https://9e7wnzvwcb.execute-api.us-east-1.amazonaws.com/dev/predict_nvdi_tif
+
+
+aws s3 ls s3://tsbiomassmodeldata/ | grep img__20251110191822__S2__B4_B3_B2__2025_10_06__2827
+
+curl -X POST https://9e7wnzvwcb.execute-api.us-east-1.amazonaws.com/dev/util_export_png \
+  -H "Content-Type: application/json" \
+  -d '{
+    "bucket": "tsbiomassmodeldata",
+    "key": "biomass_map_img__20251110191822__S2__B4_B3_B2__2025_10_06__2827.tif"
+  }'
+
+
+aws s3 cp s3://tsbiomassmodeldata/png_biomass_map_img__20251110191822__S2__B4_B3_B2__2025_10_06__2827.png ~/Downloads/ --profile suan-blockchain
+
+
+```
