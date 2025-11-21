@@ -158,24 +158,40 @@ aws lambda create-function \
 
 ## Update lambda function
 
+### Update Lambda Function Code
+
 ```sh
-aws lambda update-function-code \
-    --package-type Image \
-    --function-name ts_biomass_ndvi_lambda
-
-aws lambda create-function \
-    --function-name ts_biomass_ndvi_lambda \
-    --package-type Image \
-    --code ImageUri=036134507423.dkr.ecr.us-east-1.amazonaws.com/ts_biomass_ndvi_lambda_repo:latest \
-    --role arn:aws:iam::036134507423:role/ts-lambda-biomass-execution-role \
-    --timeout 30 \
-    --memory-size 512
-
-
 aws lambda update-function-code \
     --function-name ts_biomass_ndvi_lambda \
     --image-uri 036134507423.dkr.ecr.us-east-1.amazonaws.com/ts_biomass_ndvi_lambda_repo:latest
 ```
+
+### Update Lambda Function Configuration (Timeout and Memory)
+
+To update the timeout and memory-size of an existing Lambda function, use the `update-function-configuration` command:
+
+```sh
+# Update timeout (in seconds, max 900 seconds / 15 minutes)
+aws lambda update-function-configuration \
+    --function-name ts_biomass_ndvi_lambda \
+    --timeout 60
+
+# Update memory-size (in MB, between 128 and 10240, must be a multiple of 1MB)
+aws lambda update-function-configuration \
+    --function-name ts_biomass_ndvi_lambda \
+    --memory-size 1024
+
+# Update both timeout and memory-size in a single command
+aws lambda update-function-configuration \
+    --function-name ts_biomass_ndvi_lambda \
+    --timeout 60 \
+    --memory-size 1024
+```
+
+**Notes:**
+- **Timeout**: Range is 1-900 seconds (15 minutes). Default is 3 seconds.
+- **Memory-size**: Range is 128-10240 MB, must be a multiple of 1MB. Default is 128 MB.
+- More memory also increases CPU power proportionally, which can improve performance.
 
 ```json
 {
@@ -441,6 +457,31 @@ curl -X POST https://9e7wnzvwcb.execute-api.us-east-1.amazonaws.com/dev/util_exp
 
 
 aws s3 cp s3://tsbiomassmodeldata/png_biomass_map_img__20251110191822__S2__B4_B3_B2__2025_10_06__2827.png ~/Downloads/ --profile suan-blockchain
+
+
+```
+
+### Pruebas polígonos grandes @VH
+
+```sh
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -d '{
+    "Records": [
+      {
+        "s3": {
+          "bucket": {
+            "name": "tsbiomassmodeldata"
+          },
+          "object": {
+            "key": "img__20251120160455__S2__B4_B3_B2__2025_09_09__9155.tif"
+          }
+        }
+      }
+    ],
+    "custom_payload": "{\"output_bucket_name\": \"tsbiomassmodeldata\", \"model_bucket_name\": \"tsbiomassmodeldata\"}"
+}' \
+  https://9e7wnzvwcb.execute-api.us-east-1.amazonaws.com/dev/predict_nvdi_tif
 
 
 ```
