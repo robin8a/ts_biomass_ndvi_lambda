@@ -184,14 +184,180 @@ aws lambda update-function-configuration \
 # Update both timeout and memory-size in a single command
 aws lambda update-function-configuration \
     --function-name ts_biomass_ndvi_lambda \
-    --timeout 60 \
-    --memory-size 1024
+    --timeout 120 \
+    --memory-size 1024 \
+    --profile suan-blockchain
+
+aws lambda update-function-configuration \
+    --function-name ts_biomass_ndvi_lambda \
+    --timeout 120 \
+    --memory-size 2048 \
+    --profile suan-blockchain
 ```
 
 **Notes:**
 - **Timeout**: Range is 1-900 seconds (15 minutes). Default is 3 seconds.
 - **Memory-size**: Range is 128-10240 MB, must be a multiple of 1MB. Default is 128 MB.
 - More memory also increases CPU power proportionally, which can improve performance.
+
+## Test Lambda Function
+
+There are several ways to test your Lambda function:
+
+### Method 1: Direct Lambda Invocation (AWS CLI)
+
+Test the function directly using the AWS CLI with a test event file:
+
+```sh
+# Invoke the function with a test event
+aws lambda invoke \
+    --function-name ts_biomass_ndvi_lambda_no_png \
+    --cli-binary-format raw-in-base64-out \
+    --payload file://EventTest.json \
+    --region us-east-1 \
+    response.json
+
+# View the response
+cat response.json
+```
+
+**EventTest.json structure:**
+```json
+{
+  "Records": [
+    {
+      "s3": {
+        "bucket": {
+          "name": "tsbiomassmodeldata"
+        },
+        "object": {
+          "key": "your_test_file.tif"
+        }
+      }
+    }
+  ],
+  "custom_payload": "{\"output_bucket_name\": \"tsbiomassmodeldata\", \"model_bucket_name\": \"tsbiomassmodeldata\"}"
+}
+```
+
+**Note:** Replace `your_test_file.tif` with an actual file that exists in your S3 bucket.
+
+### Method 2: Test with Inline Payload
+
+You can also pass the event payload directly:
+
+```sh
+aws lambda invoke \
+    --function-name ts_biomass_ndvi_lambda_no_png \
+    --payload '{
+      "Records": [
+        {
+          "s3": {
+            "bucket": {
+              "name": "tsbiomassmodeldata"
+            },
+            "object": {
+              "key": "pol_20250215180043_2022_S2_B2_B3_B4_B5_drive.tif"
+            }
+          }
+        }
+      ],
+      "custom_payload": "{\"output_bucket_name\": \"tsbiomassmodeldata\", \"model_bucket_name\": \"tsbiomassmodeldata\"}"
+    }' \
+    --region us-east-1 \
+    response.json
+  
+  aws lambda invoke \
+    --function-name ts_biomass_ndvi_lambda_no_png \
+    --payload '{
+      "Records": [
+        {
+          "s3": {
+            "bucket": {
+              "name": "tsbiomassmodeldata"
+            },
+            "object": {
+              "key": "img__20251120160455__S2__B4_B3_B2__2025_09_09__9155.tif"
+            }
+          }
+        }
+      ],
+      "custom_payload": "{\"output_bucket_name\": \"tsbiomassmodeldata\", \"model_bucket_name\": \"tsbiomassmodeldata\"}"
+    }' \
+    --region us-east-1 \
+    response.json
+```
+
+### Method 3: View Lambda Logs
+
+Monitor the function execution and debug issues:
+
+```sh
+# View recent logs
+aws logs tail /aws/lambda/ts_biomass_ndvi_lambda_no_png --follow --region us-east-1
+
+# View logs for a specific time period
+aws logs tail /aws/lambda/ts_biomass_ndvi_lambda \
+    --since 1h \
+    --region us-east-1
+
+# Get the last 50 log entries
+aws logs tail /aws/lambda/ts_biomass_ndvi_lambda \
+    --since 1h \
+    --format short \
+    --region us-east-1 | tail -50
+```
+
+### Method 4: Test via API Gateway
+
+If your Lambda is connected to API Gateway, you can test it via HTTP:
+
+```sh
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -d '{
+    "Records": [
+      {
+        "s3": {
+          "bucket": {
+            "name": "tsbiomassmodeldata"
+          },
+          "object": {
+            "key": "your_test_file.tif"
+          }
+        }
+      }
+    ],
+    "custom_payload": "{\"output_bucket_name\": \"tsbiomassmodeldata\", \"model_bucket_name\": \"tsbiomassmodeldata\"}"
+  }' \
+  https://9e7wnzvwcb.execute-api.us-east-1.amazonaws.com/dev/predict_nvdi_tif
+```
+
+### Verify Output
+
+After testing, verify that the output file was created in S3:
+
+```sh
+# List files in the bucket to find the output
+aws s3 ls s3://tsbiomassmodeldata/ | grep biomass_map
+
+# Download the output file
+aws s3 cp s3://tsbiomassmodeldata/biomass_map_your_test_file.tif ~/Downloads/
+```
+
+### Check Function Status
+
+Before testing, ensure the function is active:
+
+```sh
+aws lambda get-function \
+    --function-name ts_biomass_ndvi_lambda \
+    --region us-east-1
+```
+
+**Expected Response:**
+- `State`: Should be `Active`
+- `LastUpdateStatus`: Should be `Successful`
 
 ```json
 {
@@ -235,6 +401,11 @@ aws lambda create-function \
     --role arn:aws:iam::036134507423:role/ts-lambda-biomass-execution-role \
     --timeout 30 \
     --memory-size 512
+
+aws lambda update-function-configuration \
+  --function-name ts_biomass_ndvi_lambda_no_png \
+  --timeout 120 \
+  --memory-size 2048
 
 ```
 
@@ -483,5 +654,32 @@ curl -X POST \
 }' \
   https://9e7wnzvwcb.execute-api.us-east-1.amazonaws.com/dev/predict_nvdi_tif
 
+
+```
+
+### Generate png and download it
+
+```bash
+
+# Check if the biomass image was generated
+
+aws s3 ls s3://tsbiomassmodeldata/ | grep img__20251120160455__S2__B4_B3_B2__2025_09_09__9155
+
+biomass_map_img__20251120160455__S2__B4_B3_B2__2025_09_09__9155.tif
+
+curl -X POST https://9e7wnzvwcb.execute-api.us-east-1.amazonaws.com/dev/util_export_png \
+  -H "Content-Type: application/json" \
+  -d '{
+    "bucket": "tsbiomassmodeldata",
+    "key": "biomass_map_img__20251120160455__S2__B4_B3_B2__2025_09_09__9155.tif"
+  }'
+
+# Result
+
+{"statusCode": 200, "body": "{\"message\": \"Successfully converted biomass_map_img__20251120160455__S2__B4_B3_B2__2025_09_09__9155.tif to PNG\", \"input_location\": \"s3://tsbiomassmodeldata/biomass_map_img__20251120160455__S2__B4_B3_B2__2025_09_09__9155.tif\", \"output_location\": \"s3://tsbiomassmodeldata/png_biomass_map_img__20251120160455__S2__B4_B3_B2__2025_09_09__9155.png\"}"}% 
+
+# Download the .png
+
+aws s3 cp s3://tsbiomassmodeldata/png_biomass_map_img__20251120160455__S2__B4_B3_B2__2025_09_09__9155.png ~/Downloads/ --profile suan-blockchain
 
 ```
