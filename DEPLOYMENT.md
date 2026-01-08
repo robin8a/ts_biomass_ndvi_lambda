@@ -66,12 +66,17 @@ zip -r -g biomass_model_deployment_package.zip model/
 
 ```
 
+```sh
+aws sso login --profile ts_terrasacha_admin_access
+```
+
 ## Docker file
 
 ## Create repository
 
 ```sh
-aws ecr create-repository --repository-name ts_biomass_ndvi_lambda_repo --region us-east-1
+## test:aws s3 ls --region us-east-1 --profile ts_terrasacha_admin_access
+aws ecr create-repository --repository-name ts_biomass_ndvi_lambda_repo --region us-east-1 --profile ts_terrasacha_admin_access
 ```
 
 - Result
@@ -79,11 +84,11 @@ aws ecr create-repository --repository-name ts_biomass_ndvi_lambda_repo --region
 ```json
 {
     "repository": {
-        "repositoryArn": "arn:aws:ecr:us-east-1:036134507423:repository/ts_biomass_ndvi_lambda_repo",
-        "registryId": "036134507423",
+        "repositoryArn": "arn:aws:ecr:us-east-1:879381245127:repository/ts_biomass_ndvi_lambda_repo",
+        "registryId": "879381245127",
         "repositoryName": "ts_biomass_ndvi_lambda_repo",
-        "repositoryUri": "036134507423.dkr.ecr.us-east-1.amazonaws.com/ts_biomass_ndvi_lambda_repo",
-        "createdAt": "2025-08-01T17:21:00.982000-05:00",
+        "repositoryUri": "879381245127.dkr.ecr.us-east-1.amazonaws.com/ts_biomass_ndvi_lambda_repo",
+        "createdAt": "2025-12-21T19:25:09.653000-05:00",
         "imageTagMutability": "MUTABLE",
         "imageScanningConfiguration": {
             "scanOnPush": false
@@ -99,13 +104,13 @@ aws ecr create-repository --repository-name ts_biomass_ndvi_lambda_repo --region
 ## Docker build and AWS ECR push
 
 ```sh
-aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 036134507423.dkr.ecr.us-east-1.amazonaws.com
+aws ecr get-login-password --region us-east-1 --profile ts_terrasacha_admin_access | docker login --username AWS --password-stdin 879381245127.dkr.ecr.us-east-1.amazonaws.com 
 
 docker build -t ts_biomass_ndvi_lambda_image .
 
-docker tag ts_biomass_ndvi_lambda_image:latest 036134507423.dkr.ecr.us-east-1.amazonaws.com/ts_biomass_ndvi_lambda_repo:latest
+docker tag ts_biomass_ndvi_lambda_image:latest 879381245127.dkr.ecr.us-east-1.amazonaws.com/ts_biomass_ndvi_lambda_repo:latest
 
-docker push 036134507423.dkr.ecr.us-east-1.amazonaws.com/ts_biomass_ndvi_lambda_repo:latest
+docker push 879381245127.dkr.ecr.us-east-1.amazonaws.com/ts_biomass_ndvi_lambda_repo:latest --profile ts_terrasacha_admin_access
 ```
 
 ## Create lambda function
@@ -114,10 +119,11 @@ docker push 036134507423.dkr.ecr.us-east-1.amazonaws.com/ts_biomass_ndvi_lambda_
 aws lambda create-function \
     --function-name ts_biomass_ndvi_lambda \
     --package-type Image \
-    --code ImageUri=036134507423.dkr.ecr.us-east-1.amazonaws.com/ts_biomass_ndvi_lambda_repo:latest \
-    --role arn:aws:iam::036134507423:role/ts-lambda-biomass-execution-role \
+    --code ImageUri=879381245127.dkr.ecr.us-east-1.amazonaws.com/ts_biomass_ndvi_lambda_repo:latest \
+    --role arn:aws:iam::879381245127:role/ts-lambda-models-execution-role \
     --timeout 30 \
-    --memory-size 512
+    --memory-size 512 \
+    --profile ts_terrasacha_admin_access
 
 ```
 
@@ -126,19 +132,19 @@ aws lambda create-function \
 ```json
 {
     "FunctionName": "ts_biomass_ndvi_lambda",
-    "FunctionArn": "arn:aws:lambda:us-east-1:036134507423:function:ts_biomass_ndvi_lambda",
-    "Role": "arn:aws:iam::036134507423:role/ts-lambda-biomass-execution-role",
+    "FunctionArn": "arn:aws:lambda:us-east-1:879381245127:function:ts_biomass_ndvi_lambda",
+    "Role": "arn:aws:iam::879381245127:role/ts-lambda-models-execution-role",
     "CodeSize": 0,
     "Description": "",
     "Timeout": 30,
     "MemorySize": 512,
-    "LastModified": "2025-08-02T03:47:56.892+0000",
-    "CodeSha256": "0b918a99e3911e9f462c36c34f4ca3cbbd7e88baed53e5aa2bbd3e30c1247e41",
+    "LastModified": "2025-12-22T13:54:55.451+0000",
+    "CodeSha256": "24218cee690f31fff86a8d9b123a330093b233e79a40ee97c65635a3369fb355",
     "Version": "$LATEST",
     "TracingConfig": {
         "Mode": "PassThrough"
     },
-    "RevisionId": "e002bd58-3b9c-40b9-a399-808518425dd9",
+    "RevisionId": "2533a7e2-6b5c-4321-9b7f-fb309d7737b3",
     "State": "Pending",
     "StateReason": "The function is being created.",
     "StateReasonCode": "Creating",
@@ -163,7 +169,7 @@ aws lambda create-function \
 ```sh
 aws lambda update-function-code \
     --function-name ts_biomass_ndvi_lambda \
-    --image-uri 036134507423.dkr.ecr.us-east-1.amazonaws.com/ts_biomass_ndvi_lambda_repo:latest
+    --image-uri 879381245127.dkr.ecr.us-east-1.amazonaws.com/ts_biomass_ndvi_lambda_repo:latest
 ```
 
 ### Update Lambda Function Configuration (Timeout and Memory)
@@ -211,10 +217,11 @@ Test the function directly using the AWS CLI with a test event file:
 ```sh
 # Invoke the function with a test event
 aws lambda invoke \
-    --function-name ts_biomass_ndvi_lambda_no_png \
+    --function-name ts_biomass_ndvi_lambda \
     --cli-binary-format raw-in-base64-out \
     --payload file://EventTest.json \
     --region us-east-1 \
+    --profile ts_terrasacha_admin_access \
     response.json
 
 # View the response
@@ -300,6 +307,7 @@ aws logs tail /aws/lambda/ts_biomass_ndvi_lambda_no_png --follow --region us-eas
 aws logs tail /aws/lambda/ts_biomass_ndvi_lambda \
     --since 1h \
     --region us-east-1
+    --profile ts_terrasacha_admin_access
 
 # Get the last 50 log entries
 aws logs tail /aws/lambda/ts_biomass_ndvi_lambda \
@@ -362,8 +370,8 @@ aws lambda get-function \
 ```json
 {
     "FunctionName": "ts_biomass_ndvi_lambda",
-    "FunctionArn": "arn:aws:lambda:us-east-1:036134507423:function:ts_biomass_ndvi_lambda",
-    "Role": "arn:aws:iam::036134507423:role/ts-lambda-biomass-execution-role",
+    "FunctionArn": "arn:aws:lambda:us-east-1:879381245127:function:ts_biomass_ndvi_lambda",
+    "Role": "arn:aws:iam::879381245127:role/ts-lambda-models-execution-role",
     "CodeSize": 0,
     "Description": "",
     "Timeout": 30,
@@ -397,8 +405,8 @@ aws lambda get-function \
 aws lambda create-function \
     --function-name ts_biomass_ndvi_lambda_no_png \
     --package-type Image \
-    --code ImageUri=036134507423.dkr.ecr.us-east-1.amazonaws.com/ts_biomass_ndvi_lambda_repo@sha256:0b918a99e3911e9f462c36c34f4ca3cbbd7e88baed53e5aa2bbd3e30c1247e41 \
-    --role arn:aws:iam::036134507423:role/ts-lambda-biomass-execution-role \
+    --code ImageUri=879381245127.dkr.ecr.us-east-1.amazonaws.com/ts_biomass_ndvi_lambda_repo@sha256:0b918a99e3911e9f462c36c34f4ca3cbbd7e88baed53e5aa2bbd3e30c1247e41 \
+    --role arn:aws:iam::879381245127:role/ts-lambda-models-execution-role \
     --timeout 30 \
     --memory-size 512
 

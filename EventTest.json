@@ -3,13 +3,13 @@
     {
       "s3": {
         "bucket": {
-          "name": "tsbiomassmodeldata"
+          "name": "ts-oraculo-models"
         },
         "object": {
-          "key": "img__20251120160455__S2__B4_B3_B2__2025_09_09__9155.tif"
+          "key": "_public/img__20251120160455__S2__B4_B3_B2__2025_09_09__9155.tif"
         }
       }
     }
   ],
-  "custom_payload": "{\"output_bucket_name\": \"tsbiomassmodeldata\", \"model_bucket_name\": \"tsbiomassmodeldata\"}"
+  "custom_payload": "{\"output_bucket_name\": \"ts-oraculo-models\", \"model_bucket_name\": \"ts-oraculo-models\"}"
 }
