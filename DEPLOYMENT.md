@@ -691,3 +691,17 @@ curl -X POST https://9e7wnzvwcb.execute-api.us-east-1.amazonaws.com/dev/util_exp
 aws s3 cp s3://tsbiomassmodeldata/png_biomass_map_img__20251120160455__S2__B4_B3_B2__2025_09_09__9155.png ~/Downloads/ --profile suan-blockchain
 
 ```
+
+
+## Testing
+
+```sh
+aws lambda invoke \
+  --function-name ts_biomass_ndvi_lambda \
+  --cli-binary-format raw-in-base64-out \
+  --payload file://EventTest.json \
+  --region us-east-1 \
+  --profile 879381245127_AdministratorAccess \
+  response.json
+
+```
