@@ -31,14 +31,16 @@ aws ecr create-repository \
 ## 3) Build, tag, and push the container image
 From this repo directory:
 ```sh
+# for Linux use sudo
+
 docker build -t ts_biomass_ndvi_lambda_image .
 
 docker tag ts_biomass_ndvi_lambda_image:latest \
   879381245127.dkr.ecr.us-east-1.amazonaws.com/ts_biomass_ndvi_lambda_repo:latest
 
+ # Push image to ECR (docker auth is handled by `aws ecr get-login-password ... | docker login`)
 docker push \
   879381245127.dkr.ecr.us-east-1.amazonaws.com/ts_biomass_ndvi_lambda_repo:latest \
-  --profile 879381245127_AdministratorAccess
 ```
 
 ## 4) Create the Lambda function (one-time)
